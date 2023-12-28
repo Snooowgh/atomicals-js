@@ -64,12 +64,13 @@ import { witnessStackToScriptWitness } from "../commands/witness_stack_to_script
 import { IInputUtxoPartial } from "../types/UTXO.interface";
 import { IWalletRecord } from "./validate-wallet-storage";
 import { parentPort, Worker } from "worker_threads";
+import * as fs from "fs";
 
 const ECPair: ECPairAPI = ECPairFactory(tinysecp);
 export const DEFAULT_SATS_BYTE = 10;
 const DEFAULT_SATS_ATOMICAL_UTXO = 1000;
 const SEND_RETRY_SLEEP_SECONDS = 15;
-const SEND_RETRY_ATTEMPTS = 20;
+const SEND_RETRY_ATTEMPTS = 3;
 export const DUST_AMOUNT = 546;
 export const BASE_BYTES = 10.5;
 export const INPUT_BYTES_BASE = 57.5;
@@ -1074,7 +1075,15 @@ export class AtomicalOperationBuilder {
         let result = null;
         do {
             try {
+
                 console.log("rawtx", rawtx);
+                fs.appendFile("./raw_tx.txt", rawtx + "\n", (err) => {
+                  if (err) {
+                    console.error('无法追加tx到文件末尾:', err);
+                    return;
+                  }
+                  console.log('tx已成功追加到文件末尾。');
+                });
 
                 result = await this.options.electrumApi.broadcast(rawtx);
                 if (result) {
