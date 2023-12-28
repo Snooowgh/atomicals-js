@@ -10,12 +10,13 @@ send_slack_notify() {
 }
 
 get_btc_gas_price() {
-  gas_price_info=$(curl -X GET \
+  gas_price_info=$(curl -s -X GET \
   'https://api.tatum.io/v3/blockchain/fee/BTC' \
     -H "x-api-key: $api_key")
   #echo $gas_price_info
   medium_value=$(echo "$gas_price_info" | jq -r '.medium')
-  echo "$medium_value"
+  int_num=$(printf "%.0f" "$medium_value")
+  echo "$int_num"
 }
 
 # 定义函数以获取比特币地址的未确认交易数
@@ -45,9 +46,9 @@ else
 fi
 yarn cli wallets > wallet_info.txt
 line_text=$(sed -n '25p' "wallet_info.txt")
-
+line_text1=$(sed -n '77p' "wallet_info.txt")
 regex='.* - Funding Address - (.*)'
-if [[ $line_text =~ $regex ]]; then
+if [[ $line_text1 =~ $regex ]]; then
     funding_addr="${BASH_REMATCH[1]}"
 else
     funding_addr=""
@@ -63,12 +64,16 @@ echo "Funding地址: $funding_addr Primary地址: $primary_addr Gas费上限: $g
 
 # 更新gas price
 gas_price=$(get_btc_gas_price)
+echo "⚠️ 当前gas price: $gas_price"
 if [ $gas_price -lt $gas_price_limit ]; then
   use_gas_price=$gas_price
+else
+  use_gas_price=$gas_price_limit
 fi
 
 start_time=$(date +%s.%N)
 while true; do
+    echo "🔨 开始执行命令函数: mint-dft quark"
     execution_text=$(yarn cli mint-dft quark --satsbyte $use_gas_price)
     end_time=$(date +%s.%N)
     execution_time=$(echo "$end_time - $start_time" | bc)

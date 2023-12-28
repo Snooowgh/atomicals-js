@@ -1,6 +1,6 @@
 #!/bin/bash
 sudo apt-get update -y
-sudo apt-get install -y npm
+sudo apt-get install -y npm jq
 sudo npm install -g n
 sudo n latest
 sudo npm install -g yarn
