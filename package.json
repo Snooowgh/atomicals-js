@@ -79,6 +79,7 @@
     "success-motivational-quotes": "^1.0.8",
     "terminal-image": "^2.0.0",
     "tiny-secp256k1": "^2.2.1",
+    "tsc": "^2.0.4",
     "varuint-bitcoin": "^1.1.2"
   },
   "files": [
