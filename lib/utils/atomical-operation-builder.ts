@@ -69,7 +69,7 @@ import * as fs from "fs";
 const ECPair: ECPairAPI = ECPairFactory(tinysecp);
 export const DEFAULT_SATS_BYTE = 10;
 const DEFAULT_SATS_ATOMICAL_UTXO = 1000;
-const SEND_RETRY_SLEEP_SECONDS = 15;
+const SEND_RETRY_SLEEP_SECONDS = 3;
 const SEND_RETRY_ATTEMPTS = 3;
 export const DUST_AMOUNT = 546;
 export const BASE_BYTES = 10.5;
