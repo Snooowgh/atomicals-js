@@ -794,15 +794,15 @@ export class AtomicalOperationBuilder {
                         interTx
                     );
                     notify(fundingKeypair.address + " mint第一笔tx: " + interTx.getId() + "\n" + rawtx)
-                    if (!this.broadcastWithRetries(rawtx)) {
-                        console.log("Error sending", interTx.getId(), rawtx);
-                        throw new Error(
-                            "Unable to broadcast commit transaction after attempts: " +
-                                interTx.getId()
-                        );
-                    } else {
-                        console.log("Success sent tx: ", interTx.getId());
-                    }
+                    // if (!this.broadcastWithRetries(rawtx)) {
+                    //     console.log("Error sending", interTx.getId(), rawtx);
+                    //     throw new Error(
+                    //         "Unable to broadcast commit transaction after attempts: " +
+                    //             interTx.getId()
+                    //     );
+                    // } else {
+                    //     console.log("Success sent tx: ", interTx.getId());
+                    // }
 
                     commitMinedWithBitwork = true;
                     performBitworkForCommitTx = false;
@@ -827,8 +827,8 @@ export class AtomicalOperationBuilder {
 
             worker.on("exit", (code) => {
                 if (code !== 0) {
-                    notify(fundingKeypair.address + " Work异常退出: " + code)
-                    console.error(`Worker stopped with exit code ${code}`);
+                    // notify(fundingKeypair.address + " Work异常退出: " + code)
+                    // console.error(`Worker stopped with exit code ${code}`);
                 }
             });
 
@@ -870,6 +870,7 @@ export class AtomicalOperationBuilder {
         ////////////////////////////////////////////////////////////////////////
 
         // The scriptP2TR and hashLockP2TR will contain the utxo needed for the commit and now can be revealed
+        // 获取上一笔的utxo
         const utxoOfCommitAddress = await getFundingUtxo(
             this.options.electrumApi,
             scriptP2TR.address,
@@ -877,6 +878,8 @@ export class AtomicalOperationBuilder {
             commitMinedWithBitwork,
             5
         );
+
+
         commitTxid = utxoOfCommitAddress.txid;
         atomicalId = commitTxid + "i0"; // Atomicals are always minted at the 0'th output
 
@@ -1055,15 +1058,16 @@ export class AtomicalOperationBuilder {
                 console.log("\nBroadcasting tx...", revealTx.getId());
                 const interTx = psbt.extractTransaction();
                 const rawtx = interTx.toHex();
+                console.log(rawtx);
                 notify(fundingKeypair.address + " mint第二笔tx: " + revealTx.getId() + "\n" + rawtx)
-                if (!(await this.broadcastWithRetries(rawtx))) {
-                    console.log("Error sending", revealTx.getId(), rawtx);
-                    throw new Error(
-                        "Unable to broadcast reveal transaction after attempts"
-                    );
-                } else {
-                    console.log("Success sent tx: ", revealTx.getId());
-                }
+                // if (!(await this.broadcastWithRetries(rawtx))) {
+                //     console.log("Error sending", revealTx.getId(), rawtx);
+                //     throw new Error(
+                //         "Unable to broadcast reveal transaction after attempts"
+                //     );
+                // } else {
+                //     console.log("Success sent tx: ", revealTx.getId());
+                // }
                 revealTxid = interTx.getId();
                 performBitworkForRevealTx = false; // Done
             }
@@ -1107,7 +1111,7 @@ export class AtomicalOperationBuilder {
                   console.log('tx已成功追加到文件末尾。');
                 });
 
-                result = await this.options.electrumApi.broadcast(rawtx);
+                // result = await this.options.electrumApi.broadcast(rawtx);
                 if (result) {
                     break;
                 }
