@@ -51,10 +51,10 @@ export const getFundingUtxo = async (electrumxApi, address: string, amount: numb
   // console.log(`...`)
   // console.log(`...`)
   if (!suppressDepositAddressInfo) {
-    console.log("等待第一笔TX UTXO")
+    console.log("等待funding地址有资金")
     console.log(`WAITING UNTIL ${amount / 100000000} BTC RECEIVED AT ${address}`)
   } else {
-    console.log("等待funding地址有资金")
+    console.log("等待第一笔TX UTXO")
     console.log(`WAITING UNTIL ${amount / 100000000} BTC RECEIVED AT ${address}`)
   }
   // console.log(`...`)

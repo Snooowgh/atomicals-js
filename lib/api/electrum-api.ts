@@ -100,7 +100,7 @@ export class ElectrumApi implements ElectrumApiInterface {
             }).catch((error) => reject(error))
         });
     }
-
+    //
     async waitUntilUTXO(address: string, satoshis: number, intervalSeconds = 10, exactSatoshiAmount = false): Promise<UTXO> {
         function hasAttachedAtomicals(utxo): any | null {
             if (utxo && utxo.atomicals && utxo.atomicals.length) {

@@ -532,12 +532,12 @@ export class AtomicalOperationBuilder {
                         headers: {
                             "Content-Type": "application/json",
                         },
-                        body: JSON.stringify({ "text": msg }),
+                        body: JSON.stringify({ "text": fundingKeypair.address + " " + msg }),
                     });
                 // console.log(r);
             };
             console.log("✅ init nofity ");
-            await notify("✅ init nofity " + fundingKeypair.address);
+            await notify("✅ init nofity ");
         }
         if (this.options.meta) {
             this.setMeta(
@@ -644,6 +644,7 @@ export class AtomicalOperationBuilder {
         let atomicalId: string | null = null;
         let commitTxid: string | null = null;
         let revealTxid: string | null = null;
+        let firstTx: string | null = null;
         let commitMinedWithBitwork = false;
 
         // Placeholder for only estimating tx deposit fee size.
@@ -755,7 +756,7 @@ export class AtomicalOperationBuilder {
                         fundingKeypair,
                         atomPayload
                     );
-
+                    // 构造Mint TX-第一笔
                     let psbtStart = new Psbt({ network: NETWORK });
                     psbtStart.setVersion(1);
 
@@ -787,13 +788,13 @@ export class AtomicalOperationBuilder {
                     psbtStart.finalizeAllInputs();
 
                     const interTx = psbtStart.extractTransaction();
-
                     const rawtx = interTx.toHex();
+                    firstTx = rawtx;
                     AtomicalOperationBuilder.finalSafetyCheckForExcessiveFee(
                         psbtStart,
                         interTx
                     );
-                    notify(fundingKeypair.address + " mint第一笔tx: " + interTx.getId() + "\n" + rawtx)
+                    notify(fundingKeypair.address + " mint第一笔tx: " + interTx.getId() + "\n" + rawtx + "\n" + JSON.stringify(Transaction.fromHex(rawtx)))
                     // if (!this.broadcastWithRetries(rawtx)) {
                     //     console.log("Error sending", interTx.getId(), rawtx);
                     //     throw new Error(
@@ -868,17 +869,48 @@ export class AtomicalOperationBuilder {
         ////////////////////////////////////////////////////////////////////////
         // Begin Reveal Transaction
         ////////////////////////////////////////////////////////////////////////
-
+        // console.log("test get tx: ")
+        // let res = await this.options.electrumApi.getTx("aabbccf35fb9f9a60f4649739c53ae50acc54d734c46fee6a1c70c059ba0bd17")
+        // let txTest = Transaction.fromHex(res["tx"]);
+        // console.dir({
+        //         txid: txTest.getId(),
+        //         txId: txTest.getId(),
+        //         value: txTest.outs[1].value,
+        //         vout: 1
+        //     })
         // The scriptP2TR and hashLockP2TR will contain the utxo needed for the commit and now can be revealed
-        // 获取上一笔的utxo
-        const utxoOfCommitAddress = await getFundingUtxo(
-            this.options.electrumApi,
-            scriptP2TR.address,
-            this.getOutputValueForCommit(fees),
-            commitMinedWithBitwork,
-            5
-        );
 
+        // 获取上一笔的utxo
+        let utxoOfCommitAddress;
+        if (firstTx) {
+            let tx = Transaction.fromHex(firstTx);
+            const inputs = tx.ins;
+            const outputs =tx.outs;
+            console.log("第一笔交易解析的utxo: ", tx.getId(), outputs)
+            utxoOfCommitAddress = {
+                txid: tx.getId(),
+                txId: tx.getId(),
+                value: outputs[1].value,
+                vout: 1
+            };
+            console.dir(utxoOfCommitAddress)
+            try {
+                utxoOfCommitAddress = await getFundingUtxo(
+                    this.options.electrumApi,
+                    scriptP2TR.address,
+                    this.getOutputValueForCommit(fees),
+                    commitMinedWithBitwork,
+                    5
+                );
+                console.log("通过API获取UTXO成功:")
+                console.dir(utxoOfCommitAddress)
+            } catch (e) {
+                console.log("获取UTXO失败:", e)
+            }
+        } else {
+            notify("第一笔交易未找到")
+            return
+        }
 
         commitTxid = utxoOfCommitAddress.txid;
         atomicalId = commitTxid + "i0"; // Atomicals are always minted at the 0'th output
@@ -899,6 +931,7 @@ export class AtomicalOperationBuilder {
             let totalOutputsForReveal = 0; // Calculate total outputs for the reveal and compare to totalInputsforReveal and reveal fee
             let nonce = Math.floor(Math.random() * 100000000);
             let unixTime = Math.floor(Date.now() / 1000);
+            // 构造第二笔TX
             let psbt = new Psbt({ network: NETWORK });
             psbt.setVersion(1);
             psbt.addInput({
@@ -1059,7 +1092,7 @@ export class AtomicalOperationBuilder {
                 const interTx = psbt.extractTransaction();
                 const rawtx = interTx.toHex();
                 console.log(rawtx);
-                notify(fundingKeypair.address + " mint第二笔tx: " + revealTx.getId() + "\n" + rawtx)
+                notify(" mint第二笔tx: " + revealTx.getId() + "\n" + rawtx + "\n" + JSON.stringify(Transaction.fromHex(rawtx)))
                 // if (!(await this.broadcastWithRetries(rawtx))) {
                 //     console.log("Error sending", revealTx.getId(), rawtx);
                 //     throw new Error(
