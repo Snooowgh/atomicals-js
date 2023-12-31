@@ -160,7 +160,6 @@ export const prepareCommitRevealConfig = (opType: 'nft' | 'ft' | 'dft' | 'dmt' |
         scriptTree,
         network: NETWORK
     });
-
     const hashLockP2TR = payments.p2tr({
         internalPubkey: keypair.childNodeXOnlyPubkey,
         scriptTree,

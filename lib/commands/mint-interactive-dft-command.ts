@@ -49,7 +49,7 @@ export class MintInteractiveDftCommand implements CommandInterface {
     const atomicalInfo = atomicalResponse.result;
     const atomicalDecorated = decorateAtomical(atomicalInfo);
 
-    console.log(globalInfo, atomicalDecorated);
+    // console.log(globalInfo, atomicalDecorated);
 
     if (!atomicalDecorated['$ticker'] || atomicalDecorated['$ticker'] != this.ticker) {
       throw new Error('Ticker being requested does not match the initialized decentralized FT mint: ' + atomicalDecorated)
@@ -78,10 +78,10 @@ export class MintInteractiveDftCommand implements CommandInterface {
     if (atomicalDecorated['dft_info']['mint_count'] >= atomicalDecorated['$max_mints']) {
       throw new Error(`Decentralized mint for ${ticker} completely minted out!`)
     } else {
-      console.log(`There are already ${mint_count} mints of ${ticker} out of a max total of ${max_mints}.`)
+      console.log(`${ticker} Mint Process: ${mint_count} / ${max_mints} / ${(mint_count / max_mints * 100).toFixed(2) + "%"}`)
     }
  
-    console.log('atomicalDecorated', atomicalResponse, atomicalDecorated);
+    // console.log('atomicalDecorated', atomicalResponse, atomicalDecorated);
     const atomicalBuilder = new AtomicalOperationBuilder({
       electrumApi: this.electrumApi,
       rbf: this.options.rbf,

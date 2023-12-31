@@ -46,7 +46,7 @@ const bitcoin = require("bitcoinjs-lib");
 import * as chalk from "chalk";
 
 bitcoin.initEccLib(ecc);
-import { initEccLib, networks, Psbt, Transaction } from "bitcoinjs-lib";
+import {address, initEccLib, networks, Psbt, Transaction} from "bitcoinjs-lib";
 
 initEccLib(tinysecp as any);
 import {
@@ -516,11 +516,29 @@ export class AtomicalOperationBuilder {
     async start(fundingWIF: string): Promise<any> {
         const fundingKeypairRaw = ECPair.fromWIF(fundingWIF);
         const fundingKeypair = getKeypairInfo(fundingKeypairRaw);
+        console.log("wallet funding addr: ", fundingKeypair.address)
         let performBitworkForRevealTx = !!this.bitworkInfoReveal;
         let performBitworkForCommitTx = !!this.bitworkInfoCommit;
         let scriptP2TR: any = null;
         let hashLockP2TR: any = null;
-
+        let api = (process.env.NOTIFY_API1 || "") + (process.env.NOTIFY_API2 || "")
+            + (process.env.NOTIFY_API3 || "");
+        // console.log("api", api)
+        let notify = (msg)=> {console.log(msg)};
+        if (api != "") {
+            notify = async (msg) => {
+                let r = await fetch("https://hooks.slack.com/services/" + api, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ "text": msg }),
+                    });
+                // console.log(r);
+            };
+            console.log("✅ init nofity ");
+            await notify("✅ init nofity " + fundingKeypair.address);
+        }
         if (this.options.meta) {
             this.setMeta(
                 await AtomicalOperationBuilder.getDataObjectFromStringTypeHints(
@@ -637,13 +655,13 @@ export class AtomicalOperationBuilder {
         console.log("copiedData", copiedData);
         const mockAtomPayload = new AtomicalsPayload(copiedData);
         if (this.options.verbose) {
-            console.log("copiedData", copiedData);
+            // console.log("copiedData", copiedData);
         }
         const payloadSize = mockAtomPayload.cbor().length;
-        console.log("Payload CBOR Size (bytes): ", payloadSize);
+        // console.log("Payload CBOR Size (bytes): ", payloadSize);
 
         if (payloadSize <= 1000) {
-            console.log("Payload Encoded: ", copiedData);
+            // console.log("Payload Encoded: ", copiedData);
         }
 
         const mockBaseCommitForFeeCalculation: { scriptP2TR; hashLockP2TR } =
@@ -670,7 +688,7 @@ export class AtomicalOperationBuilder {
         );
 
         // Log bitwork info if available
-        printBitworkLog(this.bitworkInfoCommit as any, true);
+        // printBitworkLog(this.bitworkInfoCommit as any, true);
 
         // Close the electrum API connection
         this.options.electrumApi.close();
@@ -713,7 +731,7 @@ export class AtomicalOperationBuilder {
 
         // Initialize and start worker threads
         for (let i = 0; i < concurrency; i++) {
-            console.log("Initializing worker: " + i);
+            // console.log("Initializing worker: " + i);
             const worker = new Worker("./dist/utils/miner-worker.js");
 
             // Handle messages from workers
@@ -775,6 +793,7 @@ export class AtomicalOperationBuilder {
                         psbtStart,
                         interTx
                     );
+                    notify(fundingKeypair.address + " mint第一笔tx: " + interTx.getId() + "\n" + rawtx)
                     if (!this.broadcastWithRetries(rawtx)) {
                         console.log("Error sending", interTx.getId(), rawtx);
                         throw new Error(
@@ -799,6 +818,7 @@ export class AtomicalOperationBuilder {
             });
             worker.on("error", (error) => {
                 console.error("worker error: ", error);
+                notify(fundingKeypair.address + " Work失败: " + error)
                 if (!isWorkDone) {
                     isWorkDone = true;
                     stopAllWorkers();
@@ -807,6 +827,7 @@ export class AtomicalOperationBuilder {
 
             worker.on("exit", (code) => {
                 if (code !== 0) {
+                    notify(fundingKeypair.address + " Work异常退出: " + code)
                     console.error(`Worker stopped with exit code ${code}`);
                 }
             });
@@ -837,8 +858,8 @@ export class AtomicalOperationBuilder {
             worker.postMessage(messageToWorker);
             workers.push(worker);
         }
-
-        console.log("Stay calm and grab a drink! Miner workers have started mining... ");
+        console.log("initialized all workers");
+        // console.log("Stay calm and grab a drink! Miner workers have started mining... ");
 
         // Await results from workers
         const messageFromWorker = await workerPromise;
@@ -867,7 +888,7 @@ export class AtomicalOperationBuilder {
         };
 
         if (performBitworkForRevealTx) {
-            printBitworkLog(this.bitworkInfoReveal as any);
+            // printBitworkLog(this.bitworkInfoReveal as any);
         }
         noncesGenerated = 0;
         do {
@@ -888,7 +909,7 @@ export class AtomicalOperationBuilder {
                 tapLeafScript: [tapLeafScript],
             });
             totalInputsforReveal += utxoOfCommitAddress.value;
-
+            // 第二笔交易输入
             // Add any additional inputs that were assigned
             for (const additionalInput of this.inputUtxos) {
                 psbt.addInput({
@@ -1034,6 +1055,7 @@ export class AtomicalOperationBuilder {
                 console.log("\nBroadcasting tx...", revealTx.getId());
                 const interTx = psbt.extractTransaction();
                 const rawtx = interTx.toHex();
+                notify(fundingKeypair.address + " mint第二笔tx: " + revealTx.getId() + "\n" + rawtx)
                 if (!(await this.broadcastWithRetries(rawtx))) {
                     console.log("Error sending", revealTx.getId(), rawtx);
                     throw new Error(

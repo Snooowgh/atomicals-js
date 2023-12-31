@@ -1,2 +1,3 @@
 #!/bin/bash
-yarn cli mint-dft quark --satsbyte 85
+yarn run build
+yarn cli mint-dft quark --satsbyte $1

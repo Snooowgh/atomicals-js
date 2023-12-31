@@ -45,17 +45,17 @@ export const getFundingSelectedUtxo = async (address: string, minFundingSatoshis
 export const getFundingUtxo = async (electrumxApi, address: string, amount: number, suppressDepositAddressInfo = false, seconds = 5) => {
   // We are expected to perform commit work, therefore we must fund with an existing UTXO first to generate the commit deposit address
   if (!suppressDepositAddressInfo) {
-    qrcode.generate(address, { small: false });
+    // qrcode.generate(address, { small: false });
   }
   // If commit POW was requested, then we will use a UTXO from the funding wallet to generate it
-  console.log(`...`)
-  console.log(`...`)
+  // console.log(`...`)
+  // console.log(`...`)
   if (!suppressDepositAddressInfo) {
     console.log(`WAITING UNTIL ${amount / 100000000} BTC RECEIVED AT ${address}`)
   }
-  console.log(`...`)
-  console.log(`...`)
+  // console.log(`...`)
+  // console.log(`...`)
   const fundingUtxo = await electrumxApi.waitUntilUTXO(address, amount, seconds ? 5 : seconds, false);
-  console.log(`Detected Funding UTXO (${fundingUtxo.txid}:${fundingUtxo.vout}) with value ${fundingUtxo.value} for funding...`);
+  console.log(`Detected UTXO (${fundingUtxo.txid}:${fundingUtxo.vout}), value: ${fundingUtxo.value / 10 ** 8} BTC`);
   return fundingUtxo
 }
