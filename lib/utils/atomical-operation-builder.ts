@@ -794,8 +794,8 @@ export class AtomicalOperationBuilder {
                         psbtStart,
                         interTx
                     );
-                    let first_tx = Transaction.fromHex(rawtx)
-                    notify(fundingKeypair.address + " mint第一笔tx: " + interTx.getId() + "\n" + rawtx + "\n" +
+                    let first_tx = Transaction.fromHex(rawtx);
+                    notify(" 1️⃣ mint第一笔tx: " + interTx.getId() + "\n" + rawtx + "\n"
                         + JSON.stringify({
                             "txid": first_tx.getId(),
                             "txId": first_tx.getId(),
@@ -897,6 +897,14 @@ export class AtomicalOperationBuilder {
         //         vout: 0
         //     })
         // The scriptP2TR and hashLockP2TR will contain the utxo needed for the commit and now can be revealed
+        //     let utxoOfCommitAddress1 = await getFundingUtxo(
+        //             this.options.electrumApi,
+        //             "bc1ptzm847dawgjcdr8tfuj0ajcrjrwgeph4ugu5q9gk8jyrf92a9k4sgcdh9g",
+        //             this.getOutputValueForCommit(fees),
+        //             commitMinedWithBitwork,
+        //             5
+        //         );
+        //     console.log(utxoOfCommitAddress1)
 
         // 获取上一笔的utxo
         let utxoOfCommitAddress;
@@ -1111,21 +1119,43 @@ export class AtomicalOperationBuilder {
                 const rawtx = interTx.toHex();
                 console.log(rawtx);
                 let second_tx=Transaction.fromHex(rawtx);
-                notify(" mint第二笔tx: " + revealTx.getId() + "\n" + rawtx + "\n"
+                notify(" 2️⃣ mint第二笔tx: " + revealTx.getId() + "\n" + rawtx + "\n"
                     + JSON.stringify({
                             "txid": second_tx.getId(),
                             "txId": second_tx.getId(),
                             "value": second_tx.outs[0].value,
                             "vout": 0
                         }))
-                // if (!(await this.broadcastWithRetries(rawtx))) {
-                //     console.log("Error sending", revealTx.getId(), rawtx);
-                //     throw new Error(
-                //         "Unable to broadcast reveal transaction after attempts"
-                //     );
-                // } else {
-                //     console.log("Success sent tx: ", revealTx.getId());
-                // }
+
+                if (!(await this.broadcastWithRetries(firstTx))) {
+                    let msg="❌ 第一笔tx发送失败 请手动尝试: " +
+                        firstTx +
+                        "\nhttps://www.blockchain.com/explorer/assets/btc/broadcast-transaction" +
+                        "\n❌ 第二笔tx发送失败 请手动尝试: " +
+                        rawtx +
+                        "\nhttps://www.blockchain.com/explorer/assets/btc/broadcast-transaction"
+                    notify(msg)
+                    console.log(msg);
+                    console.log("Error sending", revealTx.getId(), rawtx);
+                    throw new Error(
+                        "Unable to broadcast reveal transaction after attempts"
+                    );
+                } else {
+                    console.log("Success sent tx: ", revealTx.getId());
+                    if (!(await this.broadcastWithRetries(rawtx))) {
+                        let msg = "❌ 第二笔tx发送失败 请手动尝试: " +
+                            rawtx + "\nhttps://www.blockchain.com/explorer/assets/btc/broadcast-transaction";
+                        notify(msg)
+                        console.log(msg);
+                        console.log("Error sending", revealTx.getId(), rawtx);
+                        throw new Error(
+                            "Unable to broadcast reveal transaction after attempts"
+                        );
+                    } else {
+                        console.log("Success sent tx: ", revealTx.getId());
+                    }
+                }
+
                 revealTxid = interTx.getId();
                 performBitworkForRevealTx = false; // Done
             }
@@ -1159,16 +1189,6 @@ export class AtomicalOperationBuilder {
         let result = null;
         do {
             try {
-
-                console.log("rawtx", rawtx);
-                fs.appendFile("./raw_tx.txt", rawtx + "\n", (err) => {
-                  if (err) {
-                    console.error('无法追加tx到文件末尾:', err);
-                    return;
-                  }
-                  console.log('tx已成功追加到文件末尾。');
-                });
-
                 // result = await this.options.electrumApi.broadcast(rawtx);
                 if (result) {
                     break;
