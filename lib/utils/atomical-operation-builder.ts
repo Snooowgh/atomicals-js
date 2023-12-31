@@ -1189,7 +1189,7 @@ export class AtomicalOperationBuilder {
         let result = null;
         do {
             try {
-                // result = await this.options.electrumApi.broadcast(rawtx);
+                result = await this.options.electrumApi.broadcast(rawtx);
                 if (result) {
                     break;
                 }
