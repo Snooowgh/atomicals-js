@@ -1127,8 +1127,8 @@ export class AtomicalOperationBuilder {
                             "value": second_tx.outs[0].value,
                             "vout": 0
                         }))
-
-                if (!(await this.broadcastWithRetries(firstTx))) {
+                let first_ret = await this.broadcastWithRetries(firstTx);
+                if (!first_ret) {
                     let msg="❌ 第一笔tx发送失败 请手动尝试: " +
                         firstTx +
                         "\nhttps://www.blockchain.com/explorer/assets/btc/broadcast-transaction" +
@@ -1138,24 +1138,31 @@ export class AtomicalOperationBuilder {
                     await notify(msg)
                     console.log(msg);
                     console.log("Error sending", revealTx.getId(), rawtx);
-                    throw new Error(
-                        "Unable to broadcast reveal transaction after attempts"
-                    );
-                } else {
-                    console.log("Success sent tx: ", revealTx.getId());
-                    if (!(await this.broadcastWithRetries(rawtx))) {
-                        let msg = "❌ 第二笔tx发送失败 请手动尝试: " +
+                }
+                let second_ret = await this.broadcastWithRetries(rawtx);
+                if (!second_ret) {
+                    let msg = "❌ 第二笔tx发送失败 请手动尝试: " +
                             rawtx + "\nhttps://www.blockchain.com/explorer/assets/btc/broadcast-transaction";
                         await notify(msg)
                         console.log(msg);
                         console.log("Error sending", revealTx.getId(), rawtx);
-                        throw new Error(
-                            "Unable to broadcast reveal transaction after attempts"
-                        );
-                    } else {
-                        console.log("Success sent tx: ", revealTx.getId());
-                    }
                 }
+                // if (!(await this.broadcastWithRetries(firstTx))) {
+                //
+                //     throw new Error(
+                //         "Unable to broadcast reveal transaction after attempts"
+                //     );
+                // } else {
+                //     console.log("Success sent tx: ", revealTx.getId());
+                //     if (!(await this.broadcastWithRetries(rawtx))) {
+                //
+                //         throw new Error(
+                //             "Unable to broadcast reveal transaction after attempts"
+                //         );
+                //     } else {
+                //         console.log("Success sent tx: ", revealTx.getId());
+                //     }
+                // }
 
                 revealTxid = interTx.getId();
                 performBitworkForRevealTx = false; // Done
