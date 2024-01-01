@@ -194,12 +194,42 @@ export class ElectrumApi implements ElectrumApiInterface {
     }
 
     public broadcast(rawtx: string, force = false): Promise<any> {
-        return this.call(
-            force
-                ? 'blockchain.transaction.broadcast_force'
-                : 'blockchain.transaction.broadcast',
-            [rawtx],
-        );
+        // return this.call(
+        //     force
+        //         ? 'blockchain.transaction.broadcast_force'
+        //         : 'blockchain.transaction.broadcast',
+        //     [rawtx],
+        // );
+        return this.broadcastByBtcpool(rawtx);
+    }
+
+    public broadcastByBtcpool(rawtx: string): Promise<any> {
+        let call_block = async (params) => {
+          try {
+            let response: AxiosResponse<any, any>;
+            response = await axios.post(`https://tools-gateway.api.btc.com/rpc/api/v1.0/accelerate/`,
+                params);
+            return response.data;
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+      }
+      return new Promise((resolve, reject) => {
+            call_block({
+                      "jsonrpc": "2.0",
+                      "id": Date.now(),
+                      "method": "sendrawtransaction",
+                      "params": {
+                        "tx": rawtx,
+                        "email": "",
+                        "times": 1
+                      }
+                    })
+                .then(function (result: any) {
+                    console.log("广播结果:", result)
+            }).catch((error) => reject(error))
+        });
     }
 
     public dump(): Promise<any> {
