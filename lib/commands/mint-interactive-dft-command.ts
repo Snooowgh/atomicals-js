@@ -86,7 +86,8 @@ export class MintInteractiveDftCommand implements CommandInterface {
     let max_mints = 500000;
     let mint_bitworkc = "aabbcc";
     let request_ticker = "quark";
-    let mint_bitworkr = "9125";
+    // let mint_bitworkr = "9125";
+    let mint_bitworkr = null;
     let nonce = "38003492";
     let time = 170334500;
     let perAmountMint = 20000;

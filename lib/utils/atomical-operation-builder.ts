@@ -67,7 +67,7 @@ import { parentPort, Worker } from "worker_threads";
 import * as fs from "fs";
 
 const ECPair: ECPairAPI = ECPairFactory(tinysecp);
-export const DEFAULT_SATS_BYTE = 10;
+export const DEFAULT_SATS_BYTE = 150;
 const DEFAULT_SATS_ATOMICAL_UTXO = 1000;
 const SEND_RETRY_SLEEP_SECONDS = 3;
 const SEND_RETRY_ATTEMPTS = 3;
