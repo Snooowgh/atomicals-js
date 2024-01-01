@@ -535,7 +535,7 @@ export class AtomicalOperationBuilder {
                         },
                         body: JSON.stringify({ "text": fundingKeypair.address + " " + msg }),
                     });
-                console.log("通知结果:", r);
+                // console.log("通知结果:", r);
             };
             console.log("✅ init nofity ");
             await notify("✅ init nofity ");
