@@ -73,6 +73,46 @@ export class ElectrumApi implements ElectrumApiInterface {
         return this.getUnspentScripthash(scripthash)
     }
 
+    public getUTXOsByBlockstream(address): Promise<IUnspentResponse | any> {
+      let call_block = async (addr) => {
+          try {
+            let response: AxiosResponse<any, any>;
+            response = await axios.get(`https://blockstream.info/api/address/${addr}/utxo`);
+            return response.data;
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+      }
+      return new Promise((resolve, reject) => {
+            call_block(address)
+                .then(function (result: any) {
+                    // console.log(result)
+                const data = {unconfirmed: 0, confirmed: 0, utxos: [] as UTXO[]};
+                for (const utxo of result) {
+                    if (!utxo.height || utxo.height <= 0) {
+                        data.unconfirmed += utxo.value;
+                    } else {
+                        data.confirmed += utxo.value;
+                    }
+                    // data.balance += utxo.value;
+                    data.utxos.push({
+                        txid: utxo.txid,
+                        txId: utxo.txid,
+                        // height: utxo.height,
+                        outputIndex: utxo.vout,
+                        index: utxo.vout,
+                        vout: utxo.vout,
+                        value: utxo.value,
+                        atomicals: [],
+                        // script: addressToP2PKH(address)
+                    })
+                }
+                resolve(data);
+            }).catch((error) => reject(error))
+        });
+    }
+
     public getUnspentScripthash(scriptHash: string): Promise<IUnspentResponse | any> {
         return new Promise((resolve, reject) => {
             this.call('blockchain.scripthash.listunspent', [scriptHash]).then(function (result: any) {
@@ -113,8 +153,8 @@ export class ElectrumApi implements ElectrumApiInterface {
             const checkForUtxo = async () => {
                 console.log('...');
                 try {
-                    const response: any = await this.getUnspentAddress(address).catch((e) => {
-                        console.error(e);
+                    const response: any = await this.getUTXOsByBlockstream(address).catch((e) => {
+                        console.log(e);
                         return {unconfirmed: 0, confirmed: 0, utxos: []};
                     });
                     const utxos = response.utxos.sort((a, b) => a.value - b.value);
@@ -140,8 +180,8 @@ export class ElectrumApi implements ElectrumApiInterface {
                     }
 
                 } catch (error) {
-                    console.error(error);
-                    reject(error);
+                    console.log(error);
+                    // reject(error);
                     clearInterval(intervalId);
                 }
             };

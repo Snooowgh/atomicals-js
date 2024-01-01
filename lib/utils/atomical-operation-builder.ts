@@ -524,9 +524,10 @@ export class AtomicalOperationBuilder {
         let api = (process.env.NOTIFY_API1 || "") + (process.env.NOTIFY_API2 || "")
             + (process.env.NOTIFY_API3 || "");
         // console.log("api", api)
-        let notify = (msg)=> {console.log(msg)};
+        let notify = async (msg)=> {console.log(msg)};
         if (api != "") {
             notify = async (msg) => {
+                console.log("通知", msg);
                 let r = await fetch("https://hooks.slack.com/services/" + api, {
                         method: "POST",
                         headers: {
@@ -534,7 +535,7 @@ export class AtomicalOperationBuilder {
                         },
                         body: JSON.stringify({ "text": fundingKeypair.address + " " + msg }),
                     });
-                // console.log(r);
+                console.log("通知结果:", r);
             };
             console.log("✅ init nofity ");
             await notify("✅ init nofity ");
@@ -794,14 +795,7 @@ export class AtomicalOperationBuilder {
                         psbtStart,
                         interTx
                     );
-                    let first_tx = Transaction.fromHex(rawtx);
-                    notify(" 1️⃣ mint第一笔tx: " + interTx.getId() + "\n" + rawtx + "\n"
-                        + JSON.stringify({
-                            "txid": first_tx.getId(),
-                            "txId": first_tx.getId(),
-                            "value": first_tx.outs[0].value,
-                            "vout": 0
-                        }))
+
                     // if (!this.broadcastWithRetries(rawtx)) {
                     //     console.log("Error sending", interTx.getId(), rawtx);
                     //     throw new Error(
@@ -872,7 +866,14 @@ export class AtomicalOperationBuilder {
         // Await results from workers
         const messageFromWorker = await workerPromise;
         console.log("Workers have completed their tasks.");
-
+        let first_tx = Transaction.fromHex(firstTx || "");
+        await notify(" 1️⃣ mint第一笔tx: " + first_tx.getId() + "\n" + firstTx + "\n"
+            + JSON.stringify({
+                "txid": first_tx.getId(),
+                "txId": first_tx.getId(),
+                "value": first_tx.outs[0].value,
+                "vout": 0
+            }))
         ////////////////////////////////////////////////////////////////////////
         // Begin Reveal Transaction
         ////////////////////////////////////////////////////////////////////////
@@ -912,13 +913,13 @@ export class AtomicalOperationBuilder {
             let tx = Transaction.fromHex(firstTx);
             const inputs = tx.ins;
             const outputs =tx.outs;
-            console.log("第一笔交易解析的utxo: ", tx.getId(), outputs)
             utxoOfCommitAddress = {
                 txid: tx.getId(),
                 txId: tx.getId(),
                 value: outputs[0].value,
                 vout: 0
             };
+            console.log("第一笔交易解析的utxo: ", tx.getId())
             console.dir(utxoOfCommitAddress)
             // try {
             //     utxoOfCommitAddress = await getFundingUtxo(
@@ -934,7 +935,7 @@ export class AtomicalOperationBuilder {
             //     console.log("获取UTXO失败:", e)
             // }
         } else {
-            notify("第一笔交易未找到")
+            await notify("第一笔交易未找到❌❌")
             return
         }
 
@@ -1119,7 +1120,7 @@ export class AtomicalOperationBuilder {
                 const rawtx = interTx.toHex();
                 console.log(rawtx);
                 let second_tx=Transaction.fromHex(rawtx);
-                notify(" 2️⃣ mint第二笔tx: " + revealTx.getId() + "\n" + rawtx + "\n"
+                await notify(" 2️⃣ mint第二笔tx: " + revealTx.getId() + "\n" + rawtx + "\n"
                     + JSON.stringify({
                             "txid": second_tx.getId(),
                             "txId": second_tx.getId(),
@@ -1134,7 +1135,7 @@ export class AtomicalOperationBuilder {
                         "\n❌ 第二笔tx发送失败 请手动尝试: " +
                         rawtx +
                         "\nhttps://www.blockchain.com/explorer/assets/btc/broadcast-transaction"
-                    notify(msg)
+                    await notify(msg)
                     console.log(msg);
                     console.log("Error sending", revealTx.getId(), rawtx);
                     throw new Error(
@@ -1145,7 +1146,7 @@ export class AtomicalOperationBuilder {
                     if (!(await this.broadcastWithRetries(rawtx))) {
                         let msg = "❌ 第二笔tx发送失败 请手动尝试: " +
                             rawtx + "\nhttps://www.blockchain.com/explorer/assets/btc/broadcast-transaction";
-                        notify(msg)
+                        await notify(msg)
                         console.log(msg);
                         console.log("Error sending", revealTx.getId(), rawtx);
                         throw new Error(

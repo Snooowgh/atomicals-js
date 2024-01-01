@@ -43,45 +43,54 @@ export class MintInteractiveDftCommand implements CommandInterface {
     console.log("Atomical type:", 'FUNGIBLE (decentralized)', filesData, this.ticker);
     console.log("Mint for ticker: ", this.ticker);
 
-    const atomicalIdResult = await this.electrumApi.atomicalsGetByTicker(this.ticker);
-    const atomicalResponse = await this.electrumApi.atomicalsGetFtInfo(atomicalIdResult.result.atomical_id);
-    const globalInfo = atomicalResponse.global;
-    const atomicalInfo = atomicalResponse.result;
-    const atomicalDecorated = decorateAtomical(atomicalInfo);
+    // const atomicalIdResult = await this.electrumApi.atomicalsGetByTicker(this.ticker);
+    // const atomicalResponse = await this.electrumApi.atomicalsGetFtInfo(atomicalIdResult.result.atomical_id);
+    // const globalInfo = atomicalResponse.global;
+    // const atomicalInfo = atomicalResponse.result;
+    // const atomicalDecorated = decorateAtomical(atomicalInfo);
 
     // console.log(globalInfo, atomicalDecorated);
 
-    if (!atomicalDecorated['$ticker'] || atomicalDecorated['$ticker'] != this.ticker) {
-      throw new Error('Ticker being requested does not match the initialized decentralized FT mint: ' + atomicalDecorated)
-    }
+    // if (!atomicalDecorated['$ticker'] || atomicalDecorated['$ticker'] != this.ticker) {
+    //   throw new Error('Ticker being requested does not match the initialized decentralized FT mint: ' + atomicalDecorated)
+    // }
 
-    if (!atomicalDecorated['subtype'] || atomicalDecorated['subtype'] != 'decentralized') {
-      throw new Error('Subtype must be decentralized fungible token type')
-    }
-
-    if (atomicalDecorated['$mint_height'] > (globalInfo['height'] + 1)) {
-      throw new Error(`Mint height is invalid. height=${globalInfo['height']}, $mint_height=${atomicalDecorated['$mint_height']}`)
-    }
-    const perAmountMint = atomicalDecorated['$mint_amount'];
-    if (perAmountMint <= 0 || perAmountMint >= 100000000) {
-      throw new Error('Per amount mint must be > 0 and less than or equal to 100,000,000')
-    }
-    console.log("Per mint amount:", perAmountMint);
-
-    if (!atomicalDecorated['dft_info']) {
-      throw new Error(`General error no dft_info found`)
-    }
-
-    const max_mints = atomicalDecorated['$max_mints']
-    const mint_count = atomicalDecorated['dft_info']['mint_count'];
-    const ticker = atomicalDecorated['$ticker'];
-    if (atomicalDecorated['dft_info']['mint_count'] >= atomicalDecorated['$max_mints']) {
-      throw new Error(`Decentralized mint for ${ticker} completely minted out!`)
-    } else {
-      console.log(`${ticker} Mint Process: ${mint_count} / ${max_mints} / ${(mint_count / max_mints * 100).toFixed(2) + "%"}`)
-    }
+    // if (!atomicalDecorated['subtype'] || atomicalDecorated['subtype'] != 'decentralized') {
+    //   throw new Error('Subtype must be decentralized fungible token type')
+    // }
+    //
+    // if (atomicalDecorated['$mint_height'] > (globalInfo['height'] + 1)) {
+    //   throw new Error(`Mint height is invalid. height=${globalInfo['height']}, $mint_height=${atomicalDecorated['$mint_height']}`)
+    // }
+    // const perAmountMint = atomicalDecorated['$mint_amount'];
+    // if (perAmountMint <= 0 || perAmountMint >= 100000000) {
+    //   throw new Error('Per amount mint must be > 0 and less than or equal to 100,000,000')
+    // }
+    // console.log("Per mint amount:", perAmountMint);
+    //
+    // if (!atomicalDecorated['dft_info']) {
+    //   throw new Error(`General error no dft_info found`)
+    // }
+    //
+    // const max_mints = atomicalDecorated['$max_mints']
+    // const mint_count = atomicalDecorated['dft_info']['mint_count'];
+    // const ticker = atomicalDecorated['$ticker'];
+    // if (atomicalDecorated['dft_info']['mint_count'] >= atomicalDecorated['$max_mints']) {
+    //   throw new Error(`Decentralized mint for ${ticker} completely minted out!`)
+    // } else {
+    //   console.log(`${ticker} Mint Process: ${mint_count} / ${max_mints} / ${(mint_count / max_mints * 100).toFixed(2) + "%"}`)
+    // }
  
     // console.log('atomicalDecorated', atomicalResponse, atomicalDecorated);
+    let mint_height = 809521;
+    let max_mints = 500000;
+    let mint_bitworkc = "aabbcc";
+    let request_ticker = "quark";
+    let mint_bitworkr = "9125";
+    let nonce = "38003492";
+    let time = 170334500;
+    let perAmountMint = 20000;
+
     const atomicalBuilder = new AtomicalOperationBuilder({
       electrumApi: this.electrumApi,
       rbf: this.options.rbf,
@@ -104,12 +113,12 @@ export class MintInteractiveDftCommand implements CommandInterface {
       atomicalBuilder.setContainerMembership(this.options.container);
 
     // Attach any requested bitwork OR automatically request bitwork if the parent decentralized ft requires it
-    const mint_bitworkc = atomicalDecorated['$mint_bitworkc'] || this.options.bitworkc
+    // const mint_bitworkc = atomicalDecorated['$mint_bitworkc'] || this.options.bitworkc
     if (mint_bitworkc) {
       atomicalBuilder.setBitworkCommit(mint_bitworkc);
     }
 
-    const mint_bitworkr = atomicalDecorated['$mint_bitworkr'] || this.options.bitworkr
+    // const mint_bitworkr = atomicalDecorated['$mint_bitworkr'] || this.options.bitworkr
     if (mint_bitworkr) {
       atomicalBuilder.setBitworkReveal(mint_bitworkr);
     }
@@ -119,7 +128,7 @@ export class MintInteractiveDftCommand implements CommandInterface {
       address: this.address,
       value: perAmountMint
     })
-
+    // mint 入口
     const result = await atomicalBuilder.start(this.fundingWIF);
     return {
       success: true,
