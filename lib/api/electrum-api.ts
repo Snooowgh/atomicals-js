@@ -208,7 +208,12 @@ export class ElectrumApi implements ElectrumApiInterface {
           try {
             let response: AxiosResponse<any, any>;
             response = await axios.post(`https://tools-gateway.api.btc.com/rpc/api/v1.0/accelerate/`,
-                params);
+                params, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "X-API-TOKEN": "t48d79daab1ab477576e10d97b083011be91ec647112393352ed2319a2a1139e2"
+                    }
+                });
             return response.data;
         } catch (error) {
             console.log(error);
@@ -227,7 +232,8 @@ export class ElectrumApi implements ElectrumApiInterface {
                       }
                     })
                 .then(function (result: any) {
-                    console.log("广播结果:", result)
+                    if (result.error) throw new Error(result.error.message);
+                    else console.log("广播结果:", result);
             }).catch((error) => reject(error))
         });
     }
