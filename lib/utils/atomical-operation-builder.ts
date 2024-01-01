@@ -1127,9 +1127,13 @@ export class AtomicalOperationBuilder {
                             "value": second_tx.outs[0].value,
                             "vout": 0
                         }))
-                let first_ret
+
+                let first_ret;
+                let second_ret;
                 try {
+                    console.log("\nStart Broadcasting first tx...", firstTx);
                     first_ret = await this.options.electrumApi.broadcast(firstTx);
+                    second_ret = await this.options.electrumApi.broadcast(rawtx);
                     if (!first_ret) {
                     let msg="❌ 第一笔tx发送失败 请手动尝试: " +
                             firstTx +
@@ -1151,11 +1155,10 @@ export class AtomicalOperationBuilder {
                     await notify(msg)
                     console.log(msg);
                     console.log("Error sending", revealTx.getId(), rawtx);
-                    first_ret = false
                 }
 
-                let second_ret;
                 try {
+                    console.log("\nStart Broadcasting second tx...", rawtx);
                     second_ret = await this.options.electrumApi.broadcast(rawtx);
                     if (!second_ret) {
                         let msg = "❌ 第二笔tx发送失败 请手动尝试: " +
@@ -1170,7 +1173,6 @@ export class AtomicalOperationBuilder {
                         await notify(msg)
                         console.log(msg);
                         console.log("Error sending", revealTx.getId(), rawtx);
-                    second_ret = false
                 }
 
                 // if (!(await this.broadcastWithRetries(firstTx))) {
@@ -1218,31 +1220,31 @@ export class AtomicalOperationBuilder {
         return ret;
     }
 
-    async broadcastWithRetries(rawtx: string): Promise<any> {
-        let attempts = 0;
-        let result = null;
-        do {
-            try {
-                result = await this.options.electrumApi.broadcast(rawtx);
-                if (result) {
-                    break;
-                }
-            } catch (err) {
-                console.log(
-                    "Network error broadcasting (Trying again soon...)",
-                    err
-                );
-                // await this.options.electrumApi.resetConnection();
-                // Put in a sleep to help the connection reset more gracefully in case there is some delay
-                console.log(
-                    `Will retry to broadcast transaction again in ${SEND_RETRY_SLEEP_SECONDS} seconds...`
-                );
-                await sleeper(SEND_RETRY_SLEEP_SECONDS);
-            }
-            attempts++;
-        } while (attempts < SEND_RETRY_ATTEMPTS);
-        return result;
-    }
+    // async broadcastWithRetries(rawtx: string): Promise<any> {
+    //     let attempts = 0;
+    //     let result = null;
+    //     do {
+    //         try {
+    //             result = await this.options.electrumApi.broadcast(rawtx);
+    //             if (result) {
+    //                 break;
+    //             }
+    //         } catch (err) {
+    //             console.log(
+    //                 "Network error broadcasting (Trying again soon...)",
+    //                 err
+    //             );
+    //             // await this.options.electrumApi.resetConnection();
+    //             // Put in a sleep to help the connection reset more gracefully in case there is some delay
+    //             console.log(
+    //                 `Will retry to broadcast transaction again in ${SEND_RETRY_SLEEP_SECONDS} seconds...`
+    //             );
+    //             await sleeper(SEND_RETRY_SLEEP_SECONDS);
+    //         }
+    //         attempts++;
+    //     } while (attempts < SEND_RETRY_ATTEMPTS);
+    //     return result;
+    // }
 
     static translateFromBase32ToHex(bitwork: string): string {
         return bitwork;
