@@ -4,6 +4,7 @@ import axios, { AxiosResponse } from 'axios';
 import { ElectrumApiInterface, IUnspentResponse } from "./electrum-api.interface";
 import { UTXO } from "../types/UTXO.interface"
 import { detectAddressTypeToScripthash } from "../utils/address-helpers"
+import {throwError} from "tiny-secp256k1/lib/validate_error";
 
 export class ElectrumApi implements ElectrumApiInterface {
     private isOpenFlag = false;
@@ -221,6 +222,7 @@ export class ElectrumApi implements ElectrumApiInterface {
         }
       }
       return new Promise((resolve, reject) => {
+            console.log("!! BroadcastByBtcPool: ", rawtx)
             call_block({
                       "jsonrpc": "2.0",
                       "id": Date.now(),
@@ -232,9 +234,13 @@ export class ElectrumApi implements ElectrumApiInterface {
                       }
                     })
                 .then(function (result: any) {
-                    if (result.error) throw new Error(result.error.message);
+                    if (result.error) {
+                        throw new Error(result);
+                    }
                     else console.log("广播结果:", result);
-            }).catch((error) => reject(error))
+            }).catch((error) => {
+                throw error
+            })
         });
     }
 
