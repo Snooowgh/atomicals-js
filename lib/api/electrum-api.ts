@@ -223,7 +223,7 @@ export class ElectrumApi implements ElectrumApiInterface {
       }
       return new Promise((resolve, reject) => {
             console.log("!! BroadcastByBtcPool: ", rawtx)
-            call_block({
+            return call_block({
                       "jsonrpc": "2.0",
                       "id": Date.now(),
                       "method": "sendrawtransaction",
@@ -238,6 +238,7 @@ export class ElectrumApi implements ElectrumApiInterface {
                         throw new Error(result);
                     }
                     else console.log("广播结果:", result);
+                    return true;
             }).catch((error) => {
                 throw error
             })

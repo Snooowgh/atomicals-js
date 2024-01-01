@@ -1127,8 +1127,21 @@ export class AtomicalOperationBuilder {
                             "value": second_tx.outs[0].value,
                             "vout": 0
                         }))
-                let first_ret = await this.broadcastWithRetries(firstTx);
-                if (!first_ret) {
+                let first_ret
+                try {
+                    first_ret = await this.options.electrumApi.broadcast(firstTx);
+                    if (!first_ret) {
+                    let msg="❌ 第一笔tx发送失败 请手动尝试: " +
+                            firstTx +
+                            "\nhttps://www.blockchain.com/explorer/assets/btc/broadcast-transaction" +
+                            "\n❌ 第二笔tx发送失败 请手动尝试: " +
+                            rawtx +
+                            "\nhttps://www.blockchain.com/explorer/assets/btc/broadcast-transaction"
+                        await notify(msg)
+                        console.log(msg);
+                        console.log("Error sending", revealTx.getId(), rawtx);
+                    }
+                } catch (e) {
                     let msg="❌ 第一笔tx发送失败 请手动尝试: " +
                         firstTx +
                         "\nhttps://www.blockchain.com/explorer/assets/btc/broadcast-transaction" +
@@ -1138,15 +1151,28 @@ export class AtomicalOperationBuilder {
                     await notify(msg)
                     console.log(msg);
                     console.log("Error sending", revealTx.getId(), rawtx);
+                    first_ret = false
                 }
-                let second_ret = await this.broadcastWithRetries(rawtx);
-                if (!second_ret) {
+
+                let second_ret;
+                try {
+                    second_ret = await this.options.electrumApi.broadcast(rawtx);
+                    if (!second_ret) {
+                        let msg = "❌ 第二笔tx发送失败 请手动尝试: " +
+                                rawtx + "\nhttps://www.blockchain.com/explorer/assets/btc/broadcast-transaction";
+                            await notify(msg)
+                            console.log(msg);
+                            console.log("Error sending", revealTx.getId(), rawtx);
+                    }
+                } catch (e) {
                     let msg = "❌ 第二笔tx发送失败 请手动尝试: " +
                             rawtx + "\nhttps://www.blockchain.com/explorer/assets/btc/broadcast-transaction";
                         await notify(msg)
                         console.log(msg);
                         console.log("Error sending", revealTx.getId(), rawtx);
+                    second_ret = false
                 }
+
                 // if (!(await this.broadcastWithRetries(firstTx))) {
                 //
                 //     throw new Error(
