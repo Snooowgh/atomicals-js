@@ -1206,7 +1206,7 @@ export class AtomicalOperationBuilder {
                     "Network error broadcasting (Trying again soon...)",
                     err
                 );
-                await this.options.electrumApi.resetConnection();
+                // await this.options.electrumApi.resetConnection();
                 // Put in a sleep to help the connection reset more gracefully in case there is some delay
                 console.log(
                     `Will retry to broadcast transaction again in ${SEND_RETRY_SLEEP_SECONDS} seconds...`
